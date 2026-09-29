@@ -5,9 +5,9 @@ Atividade processual sobre o padrão **Publish-Subscribe (Pub/Sub)** em Sistemas
 | | |
 |---|---|
 | **Disciplina** | Sistemas Computacionais Distribuídos e Computação em Nuvem |
-| **Professor(a)** | _NOME DO PROFESSOR_ |
+| **Professor(a)** | Ana Paula Rezende |
 | **Tema** | 1 — Sistemas de Monitoramento IoT (Cidades Inteligentes / Indústria 4.0) |
-| **Integrantes** | Augusto Antônio Queirós Silva · _Integrante 2_ · _Integrante 3_ · _Integrante 4_ |
+| **Integrantes** | Augusto Antônio Queirós Silva · Luís Felipe Da Silva Abreu|
 
 ---
 

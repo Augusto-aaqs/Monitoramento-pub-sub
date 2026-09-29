@@ -20,19 +20,3 @@ Rodar: `PAUSA_MS=2000 npm start` (Windows: `$env:PAUSA_MS=2000; npm start`) e co
 6. Tópico sem assinantes → publisher não quebra.
 7. Abrir `logs/leituras.log` para mostrar o histórico gravado.
 
-## 3. Perguntas prováveis — 3 min
-
-- **Qual a diferença para chamar o método direto?** O sensor não conhece quem consome; dá para adicionar/remover consumidores sem alterar o sensor.
-- **Por que é assíncrono?** `publish()` não espera os assinantes; um assinante lento (ex.: log em disco) não atrasa o sensor nem os outros.
-- **E se um assinante der erro?** O Broker captura a exceção (try/catch por assinante) e segue entregando aos demais.
-- **Como levar para produção?** Trocar o Broker em memória por um broker real: **MQTT** (Mosquitto, padrão em IoT), Redis Pub/Sub, RabbitMQ, Kafka ou Google Cloud Pub/Sub/AWS SNS — o conceito é o mesmo.
-- **Limitação desta versão?** Broker em memória, único processo: não há persistência de mensagens nem garantia de entrega se o assinante estiver offline (em MQTT isso se resolve com QoS e mensagens retidas).
-
-## Divisão sugerida entre os integrantes
-
-| Integrante | Parte |
-|---|---|
-| 1 | Cenário e problema do acoplamento |
-| 2 | Arquitetura e código do Broker |
-| 3 | Demonstração ao vivo |
-| 4 | Perguntas / limitações e evolução para MQTT |
