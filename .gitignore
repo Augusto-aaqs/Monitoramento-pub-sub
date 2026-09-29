@@ -2,3 +2,5 @@ node_modules/
 logs/
 *.log
 .env
+apresentar.bat
+docs/roteiro-apresentacao.md
