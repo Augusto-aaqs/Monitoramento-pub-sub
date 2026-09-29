@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PainelOperador.ts — SUBSCRIBER
+ * PainelOperador.js — SUBSCRIBER
  * ============================================================================
  * Simula o painel de controle (dashboard) de um operador: apenas exibe
  * na tela as leituras que chegam dos tópicos em que está inscrito.
@@ -11,19 +11,21 @@
  * ============================================================================
  */
 
-import { Assinante, LeituraSensor } from "../types";
+const { Assinante } = require("../Assinante");
 
-// "implements Assinante" garante que a classe tenha "id" e "receber()",
-// ou seja, que ela possa ser inscrita no Broker.
-export class PainelOperador implements Assinante {
-  /** @param id nome do painel, exibido nos logs */
-  constructor(readonly id: string) {}
-
+// "extends Assinante" faz o painel seguir o contrato de assinante
+// (ter "id" e "receber()"), podendo assim ser inscrito no Broker.
+class PainelOperador extends Assinante {
   /**
    * Chamado pelo Broker a cada nova mensagem.
    * Aqui o painel só mostra a leitura formatada.
+   *
+   * @param {string} topico tópico da mensagem
+   * @param {object} m      leitura do sensor
    */
-  receber(topico: string, m: LeituraSensor): void {
+  receber(topico, m) {
     console.log(`   🖥️  [${this.id}] ${topico}: ${m.valor}${m.unidade} (sensor ${m.sensorId})`);
   }
 }
+
+module.exports = { PainelOperador };

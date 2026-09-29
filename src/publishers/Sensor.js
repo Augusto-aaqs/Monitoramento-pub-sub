@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Sensor.ts — PUBLISHER
+ * Sensor.js — PUBLISHER
  * ============================================================================
  * Representa um sensor IoT instalado em uma fábrica ou região da cidade.
  * Seu único trabalho é gerar leituras e PUBLICÁ-LAS no Broker.
@@ -12,50 +12,46 @@
  * ============================================================================
  */
 
-import { PubSub } from "../broker/PubSub";
-import { LeituraSensor, TipoSensor } from "../types";
-
 /**
  * Tabela de unidades de medida por tipo de sensor.
- * Record<TipoSensor, string> obriga a existir uma unidade para cada tipo.
+ * Object.freeze impede que a tabela seja alterada por engano.
  */
-const UNIDADES: Record<TipoSensor, string> = {
+const UNIDADES = Object.freeze({
   temperatura: "°C",
   umidade: "%",
   pressao: "bar",
   poluicao: "AQI", // Air Quality Index (índice de qualidade do ar)
-};
+});
 
-export class Sensor {
-  /** Tópico onde este sensor publica, no formato "local/tipo". */
-  readonly topico: string;
-
+class Sensor {
   /**
-   * @param broker referência ao Broker (único componente que o sensor conhece)
-   * @param id     identificador do sensor (ex.: "TEMP-A01")
-   * @param local  fábrica ou região onde está instalado (ex.: "fabrica-a")
-   * @param tipo   grandeza medida (temperatura, umidade, pressão, poluição)
-   *
-   * Obs.: "private"/"readonly" nos parâmetros do construtor já criam
-   * e preenchem os atributos da classe automaticamente (recurso do TypeScript).
+   * @param {PubSub} broker referência ao Broker (único componente que o sensor conhece)
+   * @param {string} id     identificador do sensor (ex.: "TEMP-A01")
+   * @param {string} local  fábrica ou região onde está instalado (ex.: "fabrica-a")
+   * @param {string} tipo   grandeza medida: temperatura | umidade | pressao | poluicao
    */
-  constructor(
-    private broker: PubSub,
-    readonly id: string,
-    readonly local: string,
-    readonly tipo: TipoSensor,
-  ) {
+  constructor(broker, id, local, tipo) {
+    // Validação simples: só aceita tipos que existem na tabela de unidades
+    if (!(tipo in UNIDADES)) {
+      throw new Error(`Tipo de sensor inválido: "${tipo}"`);
+    }
+
+    this.broker = broker;
+    this.id = id;
+    this.local = local;
+    this.tipo = tipo;
+
     // Monta o tópico a partir do local e do tipo: "fabrica-a/temperatura"
     this.topico = `${local}/${tipo}`;
   }
 
   /**
    * Cria uma mensagem de leitura e a publica no Broker.
-   * @param valor valor medido pelo sensor
+   * @param {number} valor valor medido pelo sensor
    */
-  publicarLeitura(valor: number): void {
-    // 1) Monta a mensagem no formato do contrato LeituraSensor
-    const leitura: LeituraSensor = {
+  publicarLeitura(valor) {
+    // 1) Monta a mensagem (formato descrito em Assinante.js)
+    const leitura = {
       sensorId: this.id,
       local: this.local,
       tipo: this.tipo,
@@ -74,3 +70,5 @@ export class Sensor {
     );
   }
 }
+
+module.exports = { Sensor };

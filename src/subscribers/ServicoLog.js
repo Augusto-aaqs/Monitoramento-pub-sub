@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * ServicoLog.ts — SUBSCRIBER
+ * ServicoLog.js — SUBSCRIBER
  * ============================================================================
  * Serviço de logs: grava cada leitura recebida em um arquivo texto
  * (logs/leituras.log), formando um histórico.
@@ -12,23 +12,28 @@
  * ============================================================================
  */
 
-// Versões com Promise das funções de arquivo do Node.js
-import { appendFile, mkdir } from "node:fs/promises";
-import { Assinante, LeituraSensor } from "../types";
+// Versões com Promise das funções de arquivo do Node.js (módulo nativo)
+const { appendFile, mkdir } = require("node:fs/promises");
+const { Assinante } = require("../Assinante");
 
-export class ServicoLog implements Assinante {
-  /** Caminho do arquivo onde as leituras são gravadas. */
-  private readonly arquivo = "logs/leituras.log";
+class ServicoLog extends Assinante {
+  /** @param {string} id nome do serviço de logs */
+  constructor(id) {
+    super(id); // chama o construtor da classe Assinante (define this.id)
 
-  /** @param id nome do serviço de logs */
-  constructor(readonly id: string) {}
+    /** Caminho do arquivo onde as leituras são gravadas. */
+    this.arquivo = "logs/leituras.log";
+  }
 
   /**
    * Chamado pelo Broker a cada nova mensagem.
    * Grava uma linha no arquivo, no formato CSV (separado por ";"):
    *   data/hora ; tópico ; sensor ; valor ; unidade
+   *
+   * @param {string} topico tópico da mensagem
+   * @param {object} m      leitura do sensor
    */
-  async receber(topico: string, m: LeituraSensor): Promise<void> {
+  async receber(topico, m) {
     // Garante que a pasta "logs" exista (recursive: não dá erro se já existir)
     await mkdir("logs", { recursive: true });
 
@@ -39,3 +44,5 @@ export class ServicoLog implements Assinante {
     console.log(`   📝 [${this.id}] gravou leitura de ${topico}`);
   }
 }
+
+module.exports = { ServicoLog };

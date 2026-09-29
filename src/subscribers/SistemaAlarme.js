@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SistemaAlarme.ts — SUBSCRIBER
+ * SistemaAlarme.js — SUBSCRIBER
  * ============================================================================
  * Central de alarmes: recebe leituras dos sensores críticos e verifica
  * se o valor está dentro de uma faixa segura. Se estiver fora, dispara
@@ -11,29 +11,30 @@
  * ============================================================================
  */
 
-import { Assinante, LeituraSensor, TipoSensor } from "../types";
+const { Assinante } = require("../Assinante");
 
 /**
  * Faixa segura (mínimo e máximo) para cada tipo de sensor.
  * Leituras fora destes limites são consideradas críticas.
  */
-const LIMITES: Record<TipoSensor, { min: number; max: number }> = {
+const LIMITES = Object.freeze({
   temperatura: { min: 5, max: 80 },   // °C
   umidade: { min: 20, max: 85 },      // %
   pressao: { min: 1, max: 8 },        // bar
   poluicao: { min: 0, max: 150 },     // AQI (acima de 150 = ar insalubre)
-};
+});
 
-export class SistemaAlarme implements Assinante {
-  /** @param id nome da central de alarmes */
-  constructor(readonly id: string) {}
-
+class SistemaAlarme extends Assinante {
   /**
    * Chamado pelo Broker a cada nova mensagem.
    * Compara o valor recebido com os limites do tipo de sensor.
+   *
+   * @param {string} topico tópico da mensagem
+   * @param {object} m      leitura do sensor
    */
-  receber(topico: string, m: LeituraSensor): void {
+  receber(topico, m) {
     // Busca os limites do tipo de sensor que enviou a leitura
+    // (desestruturação: pega "min" e "max" do objeto de uma vez)
     const { min, max } = LIMITES[m.tipo];
 
     if (m.valor < min || m.valor > max) {
@@ -47,3 +48,5 @@ export class SistemaAlarme implements Assinante {
     }
   }
 }
+
+module.exports = { SistemaAlarme };

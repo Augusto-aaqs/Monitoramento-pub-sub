@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * main.ts — SCRIPT PRINCIPAL DA SIMULAÇÃO
+ * main.js — SCRIPT PRINCIPAL DA SIMULAÇÃO
  * ============================================================================
  * Monta o cenário de Monitoramento IoT (Cidade Inteligente / Indústria 4.0)
  * e demonstra, passo a passo, o funcionamento do padrão Pub/Sub:
@@ -14,14 +14,17 @@
  *
  * Este é o ÚNICO arquivo que conhece todos os componentes, pois é ele que
  * "liga" as peças. Os componentes em si continuam sem se conhecer.
+ *
+ * Como executar:  node src/main.js   (ou  npm start)
  * ============================================================================
  */
 
-import { PubSub } from "./broker/PubSub";
-import { Sensor } from "./publishers/Sensor";
-import { PainelOperador } from "./subscribers/PainelOperador";
-import { SistemaAlarme } from "./subscribers/SistemaAlarme";
-import { ServicoLog } from "./subscribers/ServicoLog";
+// Importa as classes de cada componente (CommonJS: require/module.exports)
+const { PubSub } = require("./broker/PubSub");
+const { Sensor } = require("./publishers/Sensor");
+const { PainelOperador } = require("./subscribers/PainelOperador");
+const { SistemaAlarme } = require("./subscribers/SistemaAlarme");
+const { ServicoLog } = require("./subscribers/ServicoLog");
 
 /**
  * Tempo de pausa entre as etapas (em milissegundos), para dar tempo de
@@ -34,7 +37,7 @@ const PAUSA_MS = Number(process.env.PAUSA_MS ?? 800);
 const esperar = (ms = PAUSA_MS) => new Promise((r) => setTimeout(r, ms));
 
 /** Função auxiliar: imprime um cabeçalho destacado para cada etapa. */
-const etapa = (titulo: string) =>
+const etapa = (titulo) =>
   console.log(`\n${"=".repeat(64)}\n${titulo}\n${"=".repeat(64)}`);
 
 // A função é "async" para podermos usar "await esperar()" entre as etapas

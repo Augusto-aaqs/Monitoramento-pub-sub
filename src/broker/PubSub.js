@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PubSub.ts — BROKER (Gerenciador de Tópicos)
+ * PubSub.js — BROKER (Gerenciador de Tópicos)
  * ============================================================================
  * É o "intermediário" do padrão Publish-Subscribe. Funciona como uma
  * central de correios:
@@ -21,35 +21,35 @@
  * ============================================================================
  */
 
-import { Assinante, LeituraSensor } from "../types";
-
-export class PubSub {
-  /**
-   * Estrutura central do Broker: um mapa  tópico -> conjunto de assinantes.
-   *
-   * Exemplo de conteúdo:
-   *   "fabrica-a/*"  -> { Painel-Operador-FabricaA }
-   *   "*\/poluicao"  -> { Painel-Prefeitura, Central-Alarmes }
-   *
-   * Usamos Set (conjunto) em vez de array para que o mesmo assinante
-   * não seja inscrito duas vezes no mesmo tópico.
-   */
-  private topicos = new Map<string, Set<Assinante>>();
+class PubSub {
+  constructor() {
+    /**
+     * Estrutura central do Broker: um mapa  tópico -> conjunto de assinantes.
+     *
+     * Exemplo de conteúdo:
+     *   "fabrica-a/*"  -> { Painel-Operador-FabricaA }
+     *   "*\/poluicao"  -> { Painel-Prefeitura, Central-Alarmes }
+     *
+     * Usamos Set (conjunto) em vez de array para que o mesmo assinante
+     * não seja inscrito duas vezes no mesmo tópico.
+     */
+    this.topicos = new Map();
+  }
 
   /**
    * SUBSCRIBE — inscreve um assinante em um tópico.
    * Se o tópico ainda não existe no mapa, ele é criado na hora.
    *
-   * @param topico    tópico (pode conter "*")
-   * @param assinante objeto que implementa a interface Assinante
+   * @param {string} topico    tópico (pode conter "*")
+   * @param {Assinante} assinante objeto com "id" e método "receber()"
    */
-  subscribe(topico: string, assinante: Assinante): void {
+  subscribe(topico, assinante) {
     // Cria o conjunto de assinantes do tópico, caso ainda não exista
     if (!this.topicos.has(topico)) {
       this.topicos.set(topico, new Set());
     }
-    // Adiciona o assinante ao conjunto ("!" diz ao TS que o valor existe)
-    this.topicos.get(topico)!.add(assinante);
+    // Adiciona o assinante ao conjunto do tópico
+    this.topicos.get(topico).add(assinante);
     console.log(`  [BROKER] ${assinante.id} INSCRITO em "${topico}"`);
   }
 
@@ -57,10 +57,10 @@ export class PubSub {
    * UNSUBSCRIBE — remove um assinante de um tópico.
    * Depois disso ele deixa de receber as mensagens daquele tópico.
    *
-   * @param topico    tópico exatamente como foi usado no subscribe
-   * @param assinante assinante a ser removido
+   * @param {string} topico    tópico exatamente como foi usado no subscribe
+   * @param {Assinante} assinante assinante a ser removido
    */
-  unsubscribe(topico: string, assinante: Assinante): void {
+  unsubscribe(topico, assinante) {
     const assinantes = this.topicos.get(topico);
 
     // Set.delete() retorna false se o assinante não estava no conjunto.
@@ -82,16 +82,16 @@ export class PubSub {
    * A entrega é ASSÍNCRONA: o método retorna imediatamente para o
    * publisher, e cada assinante é notificado de forma independente.
    *
-   * @param topico   tópico concreto (sem "*"), ex.: "fabrica-a/temperatura"
-   * @param mensagem leitura do sensor
-   * @returns quantidade de assinantes que serão notificados
+   * @param {string} topico   tópico concreto (sem "*"), ex.: "fabrica-a/temperatura"
+   * @param {object} mensagem leitura do sensor
+   * @returns {number} quantidade de assinantes que serão notificados
    */
-  publish(topico: string, mensagem: LeituraSensor): number {
+  publish(topico, mensagem) {
     // 1) Descobrir QUEM deve receber.
     //    Percorremos todas as inscrições e verificamos se o padrão casa
     //    com o tópico publicado. Usamos um Set para não entregar duas vezes
-    //    ao mesmo assinante (ex.: inscrito em "*\/poluicao" e em "*\/*").
-    const destinatarios = new Set<Assinante>();
+    //    ao mesmo assinante (ex.: inscrito em "*/poluicao" e em "*/*").
+    const destinatarios = new Set();
     for (const [padrao, assinantes] of this.topicos) {
       if (PubSub.casa(padrao, topico)) {
         assinantes.forEach((a) => destinatarios.add(a));
@@ -123,9 +123,11 @@ export class PubSub {
    * Retorna um "retrato" dos tópicos ativos e seus assinantes.
    * Não faz parte do padrão em si — serve para exibir o estado do Broker
    * durante a demonstração.
+   *
+   * @returns {object} ex.: { "fabrica-a/*": ["Painel-Operador-FabricaA"] }
    */
-  listarTopicos(): Record<string, string[]> {
-    const saida: Record<string, string[]> = {};
+  listarTopicos() {
+    const saida = {};
     for (const [topico, assinantes] of this.topicos) {
       // Converte o Set de objetos em uma lista com os ids
       saida[topico] = [...assinantes].map((a) => a.id);
@@ -135,14 +137,19 @@ export class PubSub {
 
   /**
    * Verifica se um padrão de inscrição casa com o tópico publicado.
+   * "static" = método da classe, não depende de uma instância.
    *
    * Exemplos:
    *   casa("fabrica-a/temperatura", "fabrica-a/temperatura") -> true  (igual)
    *   casa("fabrica-a/*",           "fabrica-a/umidade")     -> true  (curinga)
    *   casa("*\/poluicao",            "centro/poluicao")       -> true  (curinga)
    *   casa("fabrica-a/*",           "fabrica-b/pressao")     -> false
+   *
+   * @param {string} padrao tópico da inscrição (pode ter "*")
+   * @param {string} topico tópico publicado
+   * @returns {boolean}
    */
-  private static casa(padrao: string, topico: string): boolean {
+  static casa(padrao, topico) {
     // Caso mais simples: texto idêntico
     if (padrao === topico) return true;
 
@@ -155,3 +162,5 @@ export class PubSub {
     return p.length === t.length && p.every((seg, i) => seg === "*" || seg === t[i]);
   }
 }
+
+module.exports = { PubSub };

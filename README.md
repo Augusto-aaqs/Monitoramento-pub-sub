@@ -49,36 +49,34 @@ Na inscrição é possível usar o curinga `*` em um segmento:
 
 | Papel | Arquivo | Responsabilidade |
 |---|---|---|
-| **Broker** | `src/broker/PubSub.ts` | `subscribe`, `unsubscribe`, `publish`; guarda o mapa tópico → assinantes e entrega as mensagens |
-| **Publisher** | `src/publishers/Sensor.ts` | Sensor IoT que publica leituras no seu tópico |
-| **Subscriber** | `src/subscribers/PainelOperador.ts` | Exibe as leituras recebidas |
-| **Subscriber** | `src/subscribers/SistemaAlarme.ts` | Compara com limites e dispara alarme |
-| **Subscriber** | `src/subscribers/ServicoLog.ts` | Grava cada leitura em `logs/leituras.log` (I/O assíncrono) |
-| **Contratos** | `src/types.ts` | `LeituraSensor` (mensagem) e `Assinante` (interface) |
-| **Simulação** | `src/main.ts` | Cria tudo, inscreve, publica e demonstra o unsubscribe |
+| **Broker** | `src/broker/PubSub.js` | `subscribe`, `unsubscribe`, `publish`; guarda o mapa tópico → assinantes e entrega as mensagens |
+| **Publisher** | `src/publishers/Sensor.js` | Sensor IoT que publica leituras no seu tópico |
+| **Subscriber** | `src/subscribers/PainelOperador.js` | Exibe as leituras recebidas |
+| **Subscriber** | `src/subscribers/SistemaAlarme.js` | Compara com limites e dispara alarme |
+| **Subscriber** | `src/subscribers/ServicoLog.js` | Grava cada leitura em `logs/leituras.log` (I/O assíncrono) |
+| **Contrato** | `src/Assinante.js` | Classe base de todo assinante (`id` + `receber()`) e formato da mensagem |
+| **Simulação** | `src/main.js` | Cria tudo, inscreve, publica e demonstra o unsubscribe |
 
 ### Decisões de projeto
 
-- **Desacoplamento:** publishers e subscribers dependem apenas do Broker e da interface `Assinante`.
+- **Desacoplamento:** publishers e subscribers dependem apenas do Broker e da classe base `Assinante`.
 - **Entrega assíncrona:** `publish()` retorna na hora; cada assinante é notificado em `setImmediate`, de forma independente.
 - **Isolamento de falhas:** um erro em um assinante é capturado pelo Broker e não afeta os demais nem o sensor.
 - **Sem duplicidade:** se um assinante casa com o tópico por mais de uma inscrição, recebe a mensagem uma só vez.
 
 ## ▶️ Como executar
 
-Pré-requisito: **Node.js 18+** ([nodejs.org](https://nodejs.org)).
+Feito em **JavaScript puro**, sem nenhuma dependência externa. Pré-requisito: **Node.js 16+** ([nodejs.org](https://nodejs.org)).
 
 ```bash
 git clone https://github.com/SEU-USUARIO/pubsub-iot-monitoramento.git
 cd pubsub-iot-monitoramento
-npm install
-npm start
+npm start          # ou: node src/main.js
 ```
 
-`npm start` compila o TypeScript (`dist/`) e executa a simulação. Alternativas:
+Não é preciso rodar `npm install`. Para uma pausa maior entre as etapas:
 
 ```bash
-npm run dev                 # executa direto o TypeScript com tsx (sem compilar)
 PAUSA_MS=2000 npm start     # pausa maior entre as etapas (bom para a apresentação)
 ```
 
